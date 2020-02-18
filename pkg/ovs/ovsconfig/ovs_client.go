@@ -511,6 +511,11 @@ func (br *OVSBridge) CreateUplinkPort(name string, ofPortRequest int32, external
 	return br.createPort(name, name, "", ofPortRequest, externalIDs, nil)
 }
 
+// CreateUplinkPort creates uplink port.
+func (br *OVSBridge) CreateUplinkPort(name string, ofPortRequest int32, externalIDs map[string]interface{}) (string, Error) {
+	return br.createPort(name, name, "", ofPortRequest, externalIDs, nil)
+}
+
 // CreatePort creates a port with the specified name on the bridge, and connects
 // the interface specified by ifDev to the port.
 // If externalIDs is not empty, the map key/value pairs will be set to the
