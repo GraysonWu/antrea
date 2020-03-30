@@ -26,6 +26,9 @@ var podIPs map[string]string
 // provide enough time for policies to be enforced & deleted by the CNI plugin.
 const networkPolicyDelay = 2 * time.Second
 
+// provide enough time for policies to be enforced & deleted by the CNI plugin.
+const networkPolicyDelay = 2 * time.Second
+
 func init() {
 	p80 = 80
 	p81 = 81
