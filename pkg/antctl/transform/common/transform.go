@@ -49,6 +49,10 @@ func Int32ToString(val int32) string {
 	return strconv.Itoa(int(val))
 }
 
+func Int32ToString(val int32) string {
+	return strconv.Itoa(int(val))
+}
+
 func GenerateTableElementWithSummary(list []string, maxColumnLength int) string {
 	element := ""
 	sort.Strings(list)
