@@ -167,6 +167,23 @@ func (b *OFBridge) DeleteGroup(id GroupIDType) bool {
 	return true
 }
 
+func (b *OFBridge) CreateGroup(id GroupIDType) Group {
+	ofctrlGroup, err := b.ofSwitch.NewGroup(uint32(id), ofctrl.GroupSelect)
+	if err != nil {
+		ofctrlGroup = b.ofSwitch.GetGroup(uint32(id))
+	}
+	g := &ofGroup{bridge: b, ofctrl: ofctrlGroup}
+	return g
+}
+
+func (b *OFBridge) DeleteGroup(id GroupIDType) bool {
+	err := b.ofSwitch.DeleteGroup(uint32(id))
+	if err != nil {
+		return false
+	}
+	return true
+}
+
 func (b *OFBridge) CreateTable(id, next TableIDType, missAction MissActionType) Table {
 	t := newOFTable(id, next, missAction)
 
