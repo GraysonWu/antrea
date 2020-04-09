@@ -55,6 +55,12 @@ windows-bin:
 	GOOS=windows $(GO) build -o $(BINDIR) $(GOFLAGS) -ldflags '$(LDFLAGS)' github.com/vmware-tanzu/antrea/cmd/antrea-cni \
 		github.com/vmware-tanzu/antrea/cmd/antrea-agent
 
+.PHONY: windows-bin
+windows-bin:
+	@mkdir -p $(BINDIR)
+	GOOS=windows $(GO) build -o $(BINDIR) $(GOFLAGS) -ldflags '$(LDFLAGS)' github.com/vmware-tanzu/antrea/cmd/antrea-cni \
+		github.com/vmware-tanzu/antrea/cmd/antrea-agent
+
 .PHONY: test-unit test-integration
 ifeq ($(UNAME_S),Linux)
 test-unit: .linux-test-unit
