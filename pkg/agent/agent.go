@@ -107,6 +107,7 @@ func (i *Initializer) setupOVSBridge() error {
 		klog.Error("Failed to create OVS bridge: ", err)
 		return err
 	}
+	i.nodeConfig.BridgeName = i.ovsBridgeClient.GetBridgeName()
 
 	if err := i.prepareOVSBridge(); err != nil {
 		return err
