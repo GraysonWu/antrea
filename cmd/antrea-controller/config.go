@@ -39,4 +39,8 @@ type ControllerConfig struct {
 	// antrea-controller container.
 	// Defaults to true.
 	SelfSignedCert bool `yaml:"selfSignedCert,omitempty"`
+	// Enable controller to watch for ClusterNetworkPolicy CRDs. Temporary config option
+	// to be removed once CRDs are considered stable.
+	// Defaults to false.
+	EnableSecurityCRDs bool `yaml:"enableSecurityCRDs,omitempty"`
 }
