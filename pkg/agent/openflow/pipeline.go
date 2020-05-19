@@ -321,6 +321,10 @@ func (c *client) GetTunnelVirtualMAC() net.HardwareAddr {
 	return globalVirtualMAC
 }
 
+func (c *client) GetTunnelVirtualMAC() net.HardwareAddr {
+	return globalVirtualMAC
+}
+
 func (c *client) Add(flow binding.Flow) error {
 	startTime := time.Now()
 	defer func() {
