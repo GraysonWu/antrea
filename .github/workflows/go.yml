@@ -3,13 +3,11 @@ on:
   pull_request:
     branches:
     - master
-    - windows
     - release-*
     - ipv6
   push:
     branches:
     - master
-    - windows
     - release-*
     - ipv6
 jobs:
