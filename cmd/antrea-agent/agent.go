@@ -203,6 +203,8 @@ func run(o *Options) error {
 
 	go antreaClientProvider.Run(stopCh)
 
+	go antreaClientProvider.Run(stopCh)
+
 	go nodeRouteController.Run(stopCh)
 
 	go networkPolicyController.Run(stopCh)
