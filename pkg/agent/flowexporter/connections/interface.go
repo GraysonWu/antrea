@@ -24,3 +24,10 @@ import (
 type ConnTrackDumper interface {
 	DumpFlows(zoneFilter uint16) ([]*flowexporter.Connection, error)
 }
+
+// ConnTrackInterfacer is an interface created to consume the required dump functions from either the third party
+// conntrack library or internal packages depending on OVS datapath type or OS.
+type ConnTrackInterfacer interface {
+	GetConnTrack(config interface{}) error // suggest a different name for config if it is not appropriate
+	DumpFilter(filter interface{}) ([]*flowexporter.Connection, error)
+}
