@@ -137,6 +137,17 @@ func (f *ofFlow) CopyToBuilder(priority uint16, copyActions bool) FlowBuilder {
 	return &ofFlowBuilder{newFlow}
 }
 
+// ToBuilder returns a new FlowBuilder with all the contents of the original Flow
+func (f *ofFlow) ToBuilder() FlowBuilder {
+	newFlow := ofFlow{
+		table:    f.table,
+		Flow:     f.Flow,
+		matchers: f.matchers,
+		protocol: f.protocol,
+	}
+	return &ofFlowBuilder{newFlow}
+}
+
 func (r *Range) ToNXRange() *openflow13.NXRange {
 	return openflow13.NewNXRange(int(r[0]), int(r[1]))
 }
