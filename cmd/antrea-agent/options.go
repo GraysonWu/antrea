@@ -111,6 +111,9 @@ func (o *Options) validate(args []string) error {
 	if err := o.validateFlowExporterConfig(); err != nil {
 		return fmt.Errorf("Failed to validate flow exporter config: %v", err)
 	}
+	if o.config.OVSDatapathType == ovsconfig.OVSDatapathNetdev && features.DefaultFeatureGate.Enabled(features.FlowExporter) {
+		return fmt.Errorf("FlowExporter feature is not supported for OVS datapath type %s", o.config.OVSDatapathType)
+	}
 	return nil
 }
 
