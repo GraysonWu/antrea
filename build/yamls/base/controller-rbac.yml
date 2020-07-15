@@ -144,6 +144,7 @@ rules:
       - ops.antrea.tanzu.vmware.com
     resources:
       - traceflows
+      - traceflows/status
     verbs:
       - get
       - watch
