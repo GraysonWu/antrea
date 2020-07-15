@@ -27,6 +27,7 @@ import (
 
 	"github.com/vmware-tanzu/antrea/pkg/agent/flowexporter"
 	ipfixtest "github.com/vmware-tanzu/antrea/pkg/agent/flowexporter/ipfix/testing"
+	ipfixentities "github.com/vmware/go-ipfix/pkg/entities"
 )
 
 const (
