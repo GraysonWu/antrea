@@ -516,20 +516,6 @@ func (mr *MockFlowMockRecorder) Reset() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Reset", reflect.TypeOf((*MockFlow)(nil).Reset))
 }
 
-// ToBuilder mocks base method
-func (m *MockFlow) ToBuilder() openflow.FlowBuilder {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ToBuilder")
-	ret0, _ := ret[0].(openflow.FlowBuilder)
-	return ret0
-}
-
-// ToBuilder indicates an expected call of ToBuilder
-func (mr *MockFlowMockRecorder) ToBuilder() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ToBuilder", reflect.TypeOf((*MockFlow)(nil).ToBuilder))
-}
-
 // Type mocks base method
 func (m *MockFlow) Type() openflow.EntryType {
 	m.ctrl.T.Helper()
