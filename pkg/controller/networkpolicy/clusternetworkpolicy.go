@@ -16,7 +16,7 @@ package networkpolicy
 
 import (
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/klog/v2"
+	"k8s.io/klog"
 
 	"github.com/vmware-tanzu/antrea/pkg/apis/controlplane"
 	secv1alpha1 "github.com/vmware-tanzu/antrea/pkg/apis/security/v1alpha1"
