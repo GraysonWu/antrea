@@ -1083,7 +1083,7 @@ func (n *NetworkPolicyController) syncAddressGroup(key string) error {
 			// No need to insert Pod IPAdddress when it is unset.
 			continue
 		}
-		podSet.Insert(podToMemberPod(pod, true, true))
+		podSet.Insert(podToMemberPod(pod, true, false))
 	}
 	updatedAddressGroup := &antreatypes.AddressGroup{
 		Name:     addressGroup.Name,
