@@ -85,7 +85,9 @@ spec:
               items:
                 properties:
                   action:
-                    pattern: \bAllow|\bDrop
+                    enum:
+                    - Allow
+                    - Drop
                     type: string
                   ports:
                     items:
@@ -119,7 +121,9 @@ spec:
               items:
                 properties:
                   action:
-                    pattern: \bAllow|\bDrop
+                    enum:
+                    - Allow
+                    - Drop
                     type: string
                   from:
                     items:
@@ -269,7 +273,9 @@ spec:
               items:
                 properties:
                   action:
-                    pattern: \bAllow|\bDrop
+                    enum:
+                    - Allow
+                    - Drop
                     type: string
                   ports:
                     items:
@@ -283,6 +289,8 @@ spec:
                   to:
                     items:
                       properties:
+                        externalEntitySelector:
+                          x-kubernetes-preserve-unknown-fields: true
                         ipBlock:
                           properties:
                             cidr:
@@ -303,11 +311,15 @@ spec:
               items:
                 properties:
                   action:
-                    pattern: \bAllow|\bDrop
+                    enum:
+                    - Allow
+                    - Drop
                     type: string
                   from:
                     items:
                       properties:
+                        externalEntitySelector:
+                          x-kubernetes-preserve-unknown-fields: true
                         ipBlock:
                           properties:
                             cidr:
@@ -560,6 +572,86 @@ kind: ClusterRole
 metadata:
   labels:
     app: antrea
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+  name: aggregate-antrea-policies-edit
+rules:
+- apiGroups:
+  - security.antrea.tanzu.vmware.com
+  resources:
+  - clusternetworkpolicies
+  - networkpolicies
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: antrea
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+  name: aggregate-antrea-policies-view
+rules:
+- apiGroups:
+  - security.antrea.tanzu.vmware.com
+  resources:
+  - clusternetworkpolicies
+  - networkpolicies
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: antrea
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+  name: aggregate-traceflows-edit
+rules:
+- apiGroups:
+  - ops.antrea.tanzu.vmware.com
+  resources:
+  - traceflows
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: antrea
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+  name: aggregate-traceflows-view
+rules:
+- apiGroups:
+  - ops.antrea.tanzu.vmware.com
+  resources:
+  - traceflows
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: antrea
   name: antctl
 rules:
 - apiGroups:
@@ -804,6 +896,14 @@ rules:
   - patch
   - create
   - delete
+- apiGroups:
+  - core.antrea.tanzu.vmware.com
+  resources:
+  - externalentities
+  verbs:
+  - get
+  - watch
+  - list
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -864,7 +964,7 @@ data:
   antrea-agent.conf: |
     # FeatureGates is a map of feature names to bools that enable or disable experimental features.
     featureGates:
-    # Enable antrea proxy which provides ServiceLB for in-cluster services in antrea agent.
+    # Enable AntreaProxy which provides ServiceLB for in-cluster Services in antrea-agent.
     # It should be enabled on Windows, otherwise NetworkPolicy will not take effect on
     # Service traffic.
     #  AntreaProxy: false
@@ -996,7 +1096,7 @@ metadata:
   annotations: {}
   labels:
     app: antrea
-  name: antrea-config-mh8ghcmbh6
+  name: antrea-config-b8h2ghckdc
   namespace: kube-system
 ---
 apiVersion: v1
@@ -1102,7 +1202,7 @@ spec:
         key: node-role.kubernetes.io/master
       volumes:
       - configMap:
-          name: antrea-config-mh8ghcmbh6
+          name: antrea-config-b8h2ghckdc
         name: antrea-config
       - name: antrea-controller-tls
         secret:
@@ -1317,7 +1417,7 @@ spec:
         operator: Exists
       volumes:
       - configMap:
-          name: antrea-config-mh8ghcmbh6
+          name: antrea-config-b8h2ghckdc
         name: antrea-config
       - hostPath:
           path: /etc/cni/net.d
