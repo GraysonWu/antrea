@@ -1607,6 +1607,12 @@ func schema_pkg_apis_controlplane_v1beta1_NetworkPolicy(ref common.ReferenceCall
 							Ref:         ref("github.com/vmware-tanzu/antrea/pkg/apis/controlplane/v1beta1.NetworkPolicyReference"),
 						},
 					},
+					"sourceRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Reference to the original NetworkPolicy that the internal NetworkPolicy is created for.",
+							Ref:         ref("github.com/vmware-tanzu/antrea/pkg/apis/controlplane/v1beta1.NetworkPolicyReference"),
+						},
+					},
 				},
 			},
 		},

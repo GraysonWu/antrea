@@ -532,6 +532,11 @@ func (in *NetworkPolicy) DeepCopyInto(out *NetworkPolicy) {
 		*out = new(NetworkPolicyReference)
 		**out = **in
 	}
+	if in.SourceRef != nil {
+		in, out := &in.SourceRef, &out.SourceRef
+		*out = new(NetworkPolicyReference)
+		**out = **in
+	}
 	return
 }
 
