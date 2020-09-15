@@ -523,9 +523,15 @@ func (n *NetworkPolicyController) processNetworkPolicy(np *networkingv1.NetworkP
 	}
 
 	internalNetworkPolicy := &antreatypes.NetworkPolicy{
-		Name:            np.ObjectMeta.Name,
-		Namespace:       np.ObjectMeta.Namespace,
-		UID:             np.ObjectMeta.UID,
+		Name:      np.Name,
+		Namespace: np.Namespace,
+		UID:       np.UID,
+		SourceRef: &controlplane.NetworkPolicyReference{
+			Type:      controlplane.K8sNetworkPolicy,
+			Namespace: np.Namespace,
+			Name:      np.Name,
+			UID:       np.UID,
+		},
 		AppliedToGroups: appliedToGroupNames,
 		Rules:           rules,
 	}
@@ -1234,6 +1240,7 @@ func (n *NetworkPolicyController) syncInternalNetworkPolicy(key string) error {
 		UID:             internalNP.UID,
 		Name:            internalNP.Name,
 		Namespace:       internalNP.Namespace,
+		SourceRef:       internalNP.SourceRef,
 		Rules:           internalNP.Rules,
 		AppliedToGroups: internalNP.AppliedToGroups,
 		SpanMeta:        antreatypes.SpanMeta{NodeNames: nodeNames},
