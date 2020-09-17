@@ -656,6 +656,7 @@ metadata:
 rules:
 - apiGroups:
   - controlplane.antrea.tanzu.vmware.com
+  - networking.antrea.tanzu.vmware.com
   resources:
   - networkpolicies
   - appliedtogroups
@@ -730,6 +731,7 @@ rules:
   - delete
 - apiGroups:
   - controlplane.antrea.tanzu.vmware.com
+  - networking.antrea.tanzu.vmware.com
   resources:
   - networkpolicies
   - appliedtogroups
@@ -861,19 +863,12 @@ rules:
   resourceNames:
   - v1beta1.system.antrea.tanzu.vmware.com
   - v1beta1.controlplane.antrea.tanzu.vmware.com
+  - v1beta1.networking.antrea.tanzu.vmware.com
   resources:
   - apiservices
   verbs:
   - get
   - update
-- apiGroups:
-  - apiregistration.k8s.io
-  resourceNames:
-  - v1beta1.networking.antrea.tanzu.vmware.com
-  resources:
-  - apiservices
-  verbs:
-  - delete
 - apiGroups:
   - security.antrea.tanzu.vmware.com
   resources:
@@ -1155,6 +1150,7 @@ spec:
         - --alsologtostderr
         - --log_file_max_size=100
         - --log_file_max_num=4
+        - --v=0
         command:
         - antrea-controller
         env:
@@ -1243,6 +1239,21 @@ kind: APIService
 metadata:
   labels:
     app: antrea
+  name: v1beta1.networking.antrea.tanzu.vmware.com
+spec:
+  group: networking.antrea.tanzu.vmware.com
+  groupPriorityMinimum: 100
+  service:
+    name: antrea
+    namespace: kube-system
+  version: v1beta1
+  versionPriority: 100
+---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  labels:
+    app: antrea
   name: v1beta1.system.antrea.tanzu.vmware.com
 spec:
   group: system.antrea.tanzu.vmware.com
@@ -1281,6 +1292,7 @@ spec:
         - --alsologtostderr
         - --log_file_max_size=100
         - --log_file_max_num=4
+        - --v=0
         command:
         - antrea-agent
         env:

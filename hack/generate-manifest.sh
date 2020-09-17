@@ -20,7 +20,7 @@ function echoerr {
     >&2 echo "$@"
 }
 
-_usage="Usage: $0 [--mode (dev|release)] [--kind] [--ipsec] [--keep] [--help|-h]
+_usage="Usage: $0 [--mode (dev|release)] [--encap-mode] [--kind] [--ipsec] [--proxy] [--np] [--keep] [--tun (geneve|vxlan|gre|stt)] [--verbose-log] [--help|-h]
 Generate a YAML manifest for Antrea using Kustomize and print it to stdout.
         --mode (dev|release)          Choose the configuration variant that you need (default is 'dev')
         --encap-mode                  Traffic encapsulation mode. (default is 'encap')
@@ -31,6 +31,10 @@ Generate a YAML manifest for Antrea using Kustomize and print it to stdout.
         --np                          Generate a manifest with ClusterNetworkPolicy and Antrea NetworkPolicy features enabled
         --keep                        Debug flag which will preserve the generated kustomization.yml
         --tun (geneve|vxlan|gre|stt)  Choose encap tunnel type from geneve, gre, stt and vxlan (default is geneve)
+        --verbose-log                 Generate a manifest with increased log-level (level 4) for Antrea agent and controller.
+                                      This option will work only with 'dev' mode.
+        --on-delete                   Generate a manifest with antrea-agent's update strategy set to OnDelete.
+                                      This option will work only for Kind clusters (when using '--kind').
         --help, -h                    Print this message and exit
 
 In 'release' mode, environment variables IMG_NAME and IMG_TAG must be set.
@@ -58,6 +62,8 @@ KEEP=false
 ENCAP_MODE=""
 CLOUD=""
 TUN_TYPE="geneve"
+VERBOSE_LOG=false
+ON_DELETE=false
 
 while [[ $# -gt 0 ]]
 do
@@ -100,6 +106,14 @@ case $key in
     TUN_TYPE="$2"
     shift 2
     ;;
+    --verbose-log)
+    VERBOSE_LOG=true
+    shift
+    ;;
+    --on-delete)
+    ON_DELETE=true
+    shift
+    ;;
     -h|--help)
     print_usage
     exit 0
@@ -131,6 +145,18 @@ fi
 
 if [ "$MODE" == "release" ] && [ -z "$IMG_TAG" ]; then
     echoerr "In 'release' mode, environment variable IMG_TAG must be set"
+    print_help
+    exit 1
+fi
+
+if [ "$MODE" == "release" ] && $VERBOSE_LOG; then
+    echoerr "--verbose-log works only with 'dev' mode"
+    print_help
+    exit 1
+fi
+
+if ! $KIND && $ON_DELETE; then
+    echoerr "--on-delete works only for Kind clusters"
     print_help
     exit 1
 fi
@@ -181,8 +207,8 @@ if $PROXY; then
 fi
 
 if $NP; then
-    sed -i.bak -E "s/^[[:space:]]*#[[:space:]]*ClusterNetworkPolicy[[:space:]]*:[[:space:]]*[a-z]+[[:space:]]*$/  AntreaPolicy: true/" antrea-controller.conf
-    sed -i.bak -E "s/^[[:space:]]*#[[:space:]]*ClusterNetworkPolicy[[:space:]]*:[[:space:]]*[a-z]+[[:space:]]*$/  AntreaPolicy: true/" antrea-agent.conf
+    sed -i.bak -E "s/^[[:space:]]*#[[:space:]]*AntreaPolicy[[:space:]]*:[[:space:]]*[a-z]+[[:space:]]*$/  AntreaPolicy: true/" antrea-controller.conf
+    sed -i.bak -E "s/^[[:space:]]*#[[:space:]]*AntreaPolicy[[:space:]]*:[[:space:]]*[a-z]+[[:space:]]*$/  AntreaPolicy: true/" antrea-agent.conf
 fi
 
 if [[ $ENCAP_MODE != "" ]]; then
@@ -276,6 +302,10 @@ if $KIND; then
     # change initContainer script and remove SYS_MODULE capability
     $KUSTOMIZE edit add patch installCni.yml
 
+    if $ON_DELETE; then
+        $KUSTOMIZE edit add patch onDeleteUpdateStrategy.yml
+    fi
+
     BASE=../kind
     cd ..
 fi
@@ -290,6 +320,11 @@ if [ "$MODE" == "dev" ]; then
     $KUSTOMIZE edit set image antrea=antrea/antrea-ubuntu:latest
     $KUSTOMIZE edit add patch agentImagePullPolicy.yml
     $KUSTOMIZE edit add patch controllerImagePullPolicy.yml
+    if $VERBOSE_LOG; then
+        $KUSTOMIZE edit add patch agentVerboseLog.yml
+        $KUSTOMIZE edit add patch controllerVerboseLog.yml
+    fi
+
     # only required because there is no good way at the moment to update the imagePullPolicy for all
     # containers. See https://github.com/kubernetes-sigs/kustomize/issues/1493
     if $IPSEC; then
