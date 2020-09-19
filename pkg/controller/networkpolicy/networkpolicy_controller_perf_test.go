@@ -21,12 +21,11 @@ import (
 	"fmt"
 	goruntime "runtime"
 	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
-	"k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -37,7 +36,7 @@ import (
 )
 
 /*
-TestComputeNetworkPolicyXLargeScale tests the execution time and the memory usage of computing a scale
+TestInitXLargeScaleWithSmallNamespaces tests the execution time and the memory usage of computing a scale
 of 25k Namespaces, 75k NetworkPolicies, 100k Pods. The reference value is:
 
 NAMESPACES   PODS    NETWORK-POLICIES    TIME(s)    MEMORY(M)    EXECUTIONS    EVENTS(ag, atg, np)
@@ -47,10 +46,10 @@ NAMESPACES   PODS    NETWORK-POLICIES    TIME(s)    MEMORY(M)    EXECUTIONS    E
 
 The metrics are not accurate under the race detector, and will be skipped when testing with "-race".
 */
-func TestComputeNetworkPolicyXLargeScale(t *testing.T) {
-	getObjects := func() ([]*v1.Namespace, []*networkingv1.NetworkPolicy, []*v1.Pod) {
+func TestInitXLargeScaleWithSmallNamespaces(t *testing.T) {
+	getObjects := func() ([]*corev1.Namespace, []*networkingv1.NetworkPolicy, []*corev1.Pod) {
 		namespace := rand.String(8)
-		namespaces := []*v1.Namespace{
+		namespaces := []*corev1.Namespace{
 			{
 				ObjectMeta: metav1.ObjectMeta{Name: namespace, Labels: map[string]string{"app": namespace}},
 			},
@@ -100,26 +99,26 @@ func TestComputeNetworkPolicyXLargeScale(t *testing.T) {
 				},
 			},
 		}
-		pods := []*v1.Pod{
+		pods := []*corev1.Pod{
 			{
 				ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "pod1", UID: types.UID(uuid.New().String()), Labels: map[string]string{"app-1": "scale-1"}},
-				Spec:       v1.PodSpec{NodeName: getRandomNodeName()},
-				Status:     v1.PodStatus{PodIP: getRandomIP()},
+				Spec:       corev1.PodSpec{NodeName: getRandomNodeName()},
+				Status:     corev1.PodStatus{PodIP: getRandomIP()},
 			},
 			{
 				ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "pod2", UID: types.UID(uuid.New().String()), Labels: map[string]string{"app-1": "scale-1"}},
-				Spec:       v1.PodSpec{NodeName: getRandomNodeName()},
-				Status:     v1.PodStatus{PodIP: getRandomIP()},
+				Spec:       corev1.PodSpec{NodeName: getRandomNodeName()},
+				Status:     corev1.PodStatus{PodIP: getRandomIP()},
 			},
 			{
 				ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "pod3", UID: types.UID(uuid.New().String()), Labels: map[string]string{"app-2": "scale-2"}},
-				Spec:       v1.PodSpec{NodeName: getRandomNodeName()},
-				Status:     v1.PodStatus{PodIP: getRandomIP()},
+				Spec:       corev1.PodSpec{NodeName: getRandomNodeName()},
+				Status:     corev1.PodStatus{PodIP: getRandomIP()},
 			},
 			{
 				ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "pod4", UID: types.UID(uuid.New().String()), Labels: map[string]string{"app-2": "scale-2"}},
-				Spec:       v1.PodSpec{NodeName: getRandomNodeName()},
-				Status:     v1.PodStatus{PodIP: getRandomIP()},
+				Spec:       corev1.PodSpec{NodeName: getRandomNodeName()},
+				Status:     corev1.PodStatus{PodIP: getRandomIP()},
 			},
 		}
 		return namespaces, networkPolicies, pods
@@ -128,22 +127,62 @@ func TestComputeNetworkPolicyXLargeScale(t *testing.T) {
 	testComputeNetworkPolicy(t, 10*time.Second, namespaces, networkPolicies, pods)
 }
 
-func testComputeNetworkPolicy(t *testing.T, maxExecutionTime time.Duration, namespaces []*v1.Namespace, networkPolicies []*networkingv1.NetworkPolicy, pods []*v1.Pod) {
-	objs := make([]runtime.Object, 0, len(namespaces)+len(networkPolicies)+len(pods))
-	for i := range namespaces {
-		objs = append(objs, namespaces[i])
-	}
-	for i := range networkPolicies {
-		objs = append(objs, networkPolicies[i])
-	}
-	for i := range pods {
-		objs = append(objs, pods[i])
-	}
+/*
+TestInitXLargeScaleWithOneNamespaces tests the execution time and the memory usage of computing a scale
+of 1 Namespaces, 10k NetworkPolicies, 10k Pods where each network policy selects each pod (applied + ingress).
 
+NAMESPACES   PODS    NETWORK-POLICIES    TIME(s)    MEMORY(M)    EXECUTIONS    EVENTS(ag, atg, np)
+1            10000   10000               10.66       1157         30380         20368 5 20368
+
+The metrics are not accurate under the race detector, and will be skipped when testing with "-race".
+*/
+func TestInitXLargeScaleWithOneNamespace(t *testing.T) {
+	namespace := rand.String(8)
+	getObjects := func() ([]*corev1.Namespace, []*networkingv1.NetworkPolicy, []*corev1.Pod) {
+		namespaces := []*corev1.Namespace{
+			{
+				ObjectMeta: metav1.ObjectMeta{Name: namespace, Labels: map[string]string{"app": namespace}},
+			},
+		}
+		uid := rand.String(8)
+		networkPolicies := []*networkingv1.NetworkPolicy{
+			{
+				ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "np-1" + uid, UID: types.UID(uuid.New().String())},
+				Spec: networkingv1.NetworkPolicySpec{
+					PodSelector: metav1.LabelSelector{MatchLabels: map[string]string{"app-1": "scale-1"}},
+					PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress, networkingv1.PolicyTypeEgress},
+					Ingress: []networkingv1.NetworkPolicyIngressRule{
+						{
+							From: []networkingv1.NetworkPolicyPeer{
+								{
+									PodSelector: &metav1.LabelSelector{
+										MatchLabels: map[string]string{"app-1": "scale-1"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		pods := []*corev1.Pod{
+			{
+				ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "pod1" + uid, UID: types.UID(uuid.New().String()), Labels: map[string]string{"app-1": "scale-1"}},
+				Spec:       corev1.PodSpec{NodeName: getRandomNodeName()},
+				Status:     corev1.PodStatus{PodIP: getRandomIP()},
+			},
+		}
+		return namespaces, networkPolicies, pods
+	}
+	namespaces, networkPolicies, pods := getXObjects(10000, getObjects)
+	testComputeNetworkPolicy(t, 15*time.Second, namespaces[0:1], networkPolicies, pods)
+}
+
+func testComputeNetworkPolicy(t *testing.T, maxExecutionTime time.Duration, namespaces []*corev1.Namespace, networkPolicies []*networkingv1.NetworkPolicy, pods []*corev1.Pod) {
+	objs := toRunTimeObjects(namespaces, networkPolicies, pods)
 	_, c := newController(objs...)
 	c.heartbeatCh = make(chan heartbeat, 1000)
 
-	var wg sync.WaitGroup
 	stopCh := make(chan struct{})
 
 	// executionMetric is used to count the executions of each routine and to record the last execution time.
@@ -153,13 +192,11 @@ func testComputeNetworkPolicy(t *testing.T, maxExecutionTime time.Duration, name
 	}
 	executionMetrics := map[string]*executionMetric{}
 
-	// If we don't receive any heartbeat from NetworkPolicyController for 3 seconds, it should have finished
-	// all computation 3 seconds ago.
+	// If we don't receive any heartbeat from NetworkPolicyController for 3 seconds, it means all computation
+	// finished 3 seconds ago.
 	idleTimeout := 3 * time.Second
 	timer := time.NewTimer(idleTimeout)
-	wg.Add(1)
 	go func() {
-		defer wg.Done()
 		for {
 			timer.Reset(idleTimeout)
 			select {
@@ -179,47 +216,22 @@ func testComputeNetworkPolicy(t *testing.T, maxExecutionTime time.Duration, name
 		}
 	}()
 
-	// maxAlloc is used to record the maximum heap allocation.
-	var maxAlloc uint64
-	var memStats goruntime.MemStats
+	var wg sync.WaitGroup
+
+	// Stat how many events we will get during the computation.
+	var addressGroupEvents, appliedToGroupEvents, networkPolicyEvents int32
 	wg.Add(1)
 	go func() {
-		defer wg.Done()
-		ticker := time.NewTicker(500 * time.Millisecond)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-stopCh:
-				return
-			case <-ticker.C:
-				goruntime.ReadMemStats(&memStats)
-				if memStats.Alloc > atomic.LoadUint64(&maxAlloc) {
-					atomic.StoreUint64(&maxAlloc, memStats.Alloc)
-				}
-			}
-		}
+		statEvents(c, &addressGroupEvents, &appliedToGroupEvents, &networkPolicyEvents, stopCh)
+		wg.Done()
 	}()
 
-	// The watchers are used to count how many events we will get during the computation.
-	addressGroupWatcher, _ := c.addressGroupStore.Watch(context.Background(), "", labels.Everything(), fields.Everything())
-	appliedToGroupWatcher, _ := c.appliedToGroupStore.Watch(context.Background(), "", labels.Everything(), fields.Everything())
-	networkPolicyWatcher, _ := c.internalNetworkPolicyStore.Watch(context.Background(), "", labels.Everything(), fields.Everything())
-	addressGroupEvents, appliedToGroupEvents, networkPolicyEvents := 0, 0, 0
+	// Stat the maximum heap allocation.
+	var maxAlloc uint64
 	wg.Add(1)
 	go func() {
-		defer wg.Done()
-		for {
-			select {
-			case <-addressGroupWatcher.ResultChan():
-				addressGroupEvents++
-			case <-appliedToGroupWatcher.ResultChan():
-				appliedToGroupEvents++
-			case <-networkPolicyWatcher.ResultChan():
-				networkPolicyEvents++
-			case <-stopCh:
-				return
-			}
-		}
+		statMaxMemAlloc(&maxAlloc, 500*time.Millisecond, stopCh)
+		wg.Done()
 	}()
 
 	// Everything is ready, now start timing.
@@ -229,25 +241,59 @@ func testComputeNetworkPolicy(t *testing.T, maxExecutionTime time.Duration, name
 
 	// Block until all computation is done.
 	<-stopCh
-	// Minus the idle time to get the actual finish time.
+	// Minus the idle time to get the actual execution time.
 	executionTime := time.Since(start) - idleTimeout
 	if executionTime > maxExecutionTime {
 		t.Errorf("The actual execution time %v is greater than the maximum value %v", executionTime, maxExecutionTime)
 	}
-
-	// Block until all statistics are done.
-	wg.Wait()
-
 	totalExecution := 0
 	for name, m := range executionMetrics {
 		t.Logf("Execution metrics of %s, executions: %d, duration: %v", name, m.executions, m.lastExecution.Sub(start))
 		totalExecution += m.executions
 	}
 
+	// Block until all statistics are done.
+	wg.Wait()
+
 	t.Logf(`Summary metrics:
 NAMESPACES   PODS    NETWORK-POLICIES    TIME(s)    MEMORY(M)    EXECUTIONS    EVENTS(ag, atg, np)
 %-12d %-7d %-19d %-10.2f %-12d %-13d %d %d %d
-`, len(namespaces), len(pods), len(networkPolicies), float64(executionTime)/float64(time.Second), atomic.LoadUint64(&maxAlloc)/1024/1024, totalExecution, networkPolicyEvents, appliedToGroupEvents, networkPolicyEvents)
+`, len(namespaces), len(pods), len(networkPolicies), float64(executionTime)/float64(time.Second), maxAlloc/1024/1024, totalExecution, networkPolicyEvents, appliedToGroupEvents, networkPolicyEvents)
+}
+
+func statEvents(c *networkPolicyController, addressGroupEvents, appliedToGroupEvents, networkPolicyEvents *int32, stopCh chan struct{}) {
+	addressGroupWatcher, _ := c.addressGroupStore.Watch(context.Background(), "", labels.Everything(), fields.Everything())
+	appliedToGroupWatcher, _ := c.appliedToGroupStore.Watch(context.Background(), "", labels.Everything(), fields.Everything())
+	networkPolicyWatcher, _ := c.internalNetworkPolicyStore.Watch(context.Background(), "", labels.Everything(), fields.Everything())
+	for {
+		select {
+		case <-addressGroupWatcher.ResultChan():
+			*addressGroupEvents++
+		case <-appliedToGroupWatcher.ResultChan():
+			*appliedToGroupEvents++
+		case <-networkPolicyWatcher.ResultChan():
+			*networkPolicyEvents++
+		case <-stopCh:
+			return
+		}
+	}
+}
+
+func statMaxMemAlloc(maxAlloc *uint64, interval time.Duration, stopCh chan struct{}) {
+	var memStats goruntime.MemStats
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			goruntime.ReadMemStats(&memStats)
+			if memStats.Alloc > *maxAlloc {
+				*maxAlloc = memStats.Alloc
+			}
+		case <-stopCh:
+			return
+		}
+	}
 }
 
 func getRandomIP() string {
@@ -258,10 +304,11 @@ func getRandomNodeName() string {
 	return fmt.Sprintf("Node-%d", rand.Intn(1000))
 }
 
-func getXObjects(x int, getObjectsFunc func() ([]*v1.Namespace, []*networkingv1.NetworkPolicy, []*v1.Pod)) ([]*v1.Namespace, []*networkingv1.NetworkPolicy, []*v1.Pod) {
-	var namespaces []*v1.Namespace
+// getXObjects calls the provided getObjectsFunc x times and aggregate the objects.
+func getXObjects(x int, getObjectsFunc func() ([]*corev1.Namespace, []*networkingv1.NetworkPolicy, []*corev1.Pod)) ([]*corev1.Namespace, []*networkingv1.NetworkPolicy, []*corev1.Pod) {
+	var namespaces []*corev1.Namespace
 	var networkPolicies []*networkingv1.NetworkPolicy
-	var pods []*v1.Pod
+	var pods []*corev1.Pod
 	for i := 0; i < x; i++ {
 		newNamespaces, newNetworkPolicies, newPods := getObjectsFunc()
 		namespaces = append(namespaces, newNamespaces...)
@@ -269,4 +316,18 @@ func getXObjects(x int, getObjectsFunc func() ([]*v1.Namespace, []*networkingv1.
 		pods = append(pods, newPods...)
 	}
 	return namespaces, networkPolicies, pods
+}
+
+func toRunTimeObjects(namespaces []*corev1.Namespace, networkPolicies []*networkingv1.NetworkPolicy, pods []*corev1.Pod) []runtime.Object {
+	objs := make([]runtime.Object, 0, len(namespaces)+len(networkPolicies)+len(pods))
+	for i := range namespaces {
+		objs = append(objs, namespaces[i])
+	}
+	for i := range networkPolicies {
+		objs = append(objs, networkPolicies[i])
+	}
+	for i := range pods {
+		objs = append(objs, pods[i])
+	}
+	return objs
 }
