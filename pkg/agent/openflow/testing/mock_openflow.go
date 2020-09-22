@@ -24,6 +24,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	config "github.com/vmware-tanzu/antrea/pkg/agent/config"
 	types "github.com/vmware-tanzu/antrea/pkg/agent/types"
+	v1beta1 "github.com/vmware-tanzu/antrea/pkg/apis/controlplane/v1beta1"
 	openflow "github.com/vmware-tanzu/antrea/pkg/ovs/openflow"
 	proxy "github.com/vmware-tanzu/antrea/third_party/proxy"
 	net "net"
@@ -166,12 +167,11 @@ func (mr *MockClientMockRecorder) GetPodFlowKeys(arg0 interface{}) *gomock.Call 
 }
 
 // GetPolicyFromConjunction mocks base method
-func (m *MockClient) GetPolicyFromConjunction(arg0 uint32) (string, string) {
+func (m *MockClient) GetPolicyFromConjunction(arg0 uint32) *v1beta1.NetworkPolicyReference {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPolicyFromConjunction", arg0)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(string)
-	return ret0, ret1
+	ret0, _ := ret[0].(*v1beta1.NetworkPolicyReference)
+	return ret0
 }
 
 // GetPolicyFromConjunction indicates an expected call of GetPolicyFromConjunction
@@ -238,17 +238,17 @@ func (mr *MockClientMockRecorder) InstallBridgeUplinkFlows(arg0, arg1 interface{
 }
 
 // InstallClusterServiceCIDRFlows mocks base method
-func (m *MockClient) InstallClusterServiceCIDRFlows(arg0 *net.IPNet, arg1 net.HardwareAddr, arg2 uint32) error {
+func (m *MockClient) InstallClusterServiceCIDRFlows(arg0 *net.IPNet, arg1 uint32) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InstallClusterServiceCIDRFlows", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "InstallClusterServiceCIDRFlows", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // InstallClusterServiceCIDRFlows indicates an expected call of InstallClusterServiceCIDRFlows
-func (mr *MockClientMockRecorder) InstallClusterServiceCIDRFlows(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) InstallClusterServiceCIDRFlows(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InstallClusterServiceCIDRFlows", reflect.TypeOf((*MockClient)(nil).InstallClusterServiceCIDRFlows), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InstallClusterServiceCIDRFlows", reflect.TypeOf((*MockClient)(nil).InstallClusterServiceCIDRFlows), arg0, arg1)
 }
 
 // InstallClusterServiceFlows mocks base method
