@@ -79,10 +79,11 @@ type rule struct {
 	// PolicyNamespace is empty for ClusterNetworkPolicy.
 	PolicyNamespace string
 	// Reference to the original NetworkPolicy that the rule belongs to.
-	// Note it has different meaning from PolicyUID, PolicyName, and
-	// PolicyNamespace which are the metadata of controlplane NetworkPolicy.
-	// Although they are same for now, it might change in future, features that
-	// need the information of the original NetworkPolicy should use SourceRef.
+	// Note it has a different meaning from PolicyUID, PolicyName, and
+	// PolicyNamespace which are the metadata fields of the corresponding
+	// controlplane NetworkPolicy. Although they are same for now, it might
+	// change in the future, features that need the information of the original
+	// NetworkPolicy should use SourceRef.
 	SourceRef *v1beta1.NetworkPolicyReference
 }
 
