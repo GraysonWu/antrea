@@ -102,7 +102,13 @@ var CommandList = &commandList{
 							usage:     "Get NetworkPolicies applied to the Pod. If present, Namespace must be provided.",
 							shorthand: "p",
 						},
+						{
+							name:      "reference",
+							usage:     "Get NetworkPolicies with specific reference. Type means its source network policy: K8sNP, CNP, ANP",
+							shorthand: "r",
+						},
 					},
+					outputType: multiple,
 				},
 				addonTransform: networkpolicy.Transform,
 			},
