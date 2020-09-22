@@ -22,7 +22,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"github.com/vmware-tanzu/antrea/pkg/apis/controlplane/v1beta1"
@@ -385,11 +384,13 @@ func TestRuleCacheReplaceNetworkPolicies(t *testing.T) {
 		ObjectMeta:      metav1.ObjectMeta{UID: "policy1"},
 		Rules:           []v1beta1.NetworkPolicyRule{*networkPolicyRule1},
 		AppliedToGroups: []string{"addressGroup1"},
+		SourceRef:       &v1beta1.NetworkPolicyReference{UID: "policy1"},
 	}
 	networkPolicy2 := &v1beta1.NetworkPolicy{
 		ObjectMeta:      metav1.ObjectMeta{UID: "policy1"},
 		Rules:           []v1beta1.NetworkPolicyRule{*networkPolicyRule1},
 		AppliedToGroups: []string{"addressGroup2"},
+		SourceRef:       &v1beta1.NetworkPolicyReference{UID: "policy1"},
 	}
 	rule1 := toRule(networkPolicyRule1, networkPolicy1)
 	rule2 := toRule(networkPolicyRule1, networkPolicy2)
@@ -434,7 +435,7 @@ func TestRuleCacheReplaceNetworkPolicies(t *testing.T) {
 			c, recorder, _ := newFakeRuleCache()
 			for _, rule := range tt.rules {
 				c.rules.Add(rule)
-				c.policyMap[string(rule.PolicyUID)] = &types.NamespacedName{Namespace: rule.PolicyNamespace, Name: rule.PolicyName}
+				c.policyMap[string(rule.PolicyUID)] = *rule.SourceRef
 			}
 			c.ReplaceNetworkPolicies(tt.args)
 
@@ -530,11 +531,13 @@ func TestRuleCacheAddNetworkPolicy(t *testing.T) {
 		ObjectMeta:      metav1.ObjectMeta{UID: "policy1", Namespace: "ns1", Name: "name1"},
 		Rules:           nil,
 		AppliedToGroups: []string{"appliedToGroup1"},
+		SourceRef:       &v1beta1.NetworkPolicyReference{UID: "policy1", Namespace: "ns1", Name: "name1"},
 	}
 	networkPolicy2 := &v1beta1.NetworkPolicy{
 		ObjectMeta:      metav1.ObjectMeta{UID: "policy2", Namespace: "ns2", Name: "name2"},
 		Rules:           []v1beta1.NetworkPolicyRule{*networkPolicyRule1, *networkPolicyRule2},
 		AppliedToGroups: []string{"appliedToGroup1"},
+		SourceRef:       &v1beta1.NetworkPolicyReference{UID: "policy2", Namespace: "ns2", Name: "name2"},
 	}
 	rule1 := toRule(networkPolicyRule1, networkPolicy2)
 	rule2 := toRule(networkPolicyRule2, networkPolicy2)
@@ -904,16 +907,19 @@ func TestRuleCacheUpdateNetworkPolicy(t *testing.T) {
 		ObjectMeta:      metav1.ObjectMeta{UID: "policy1"},
 		Rules:           []v1beta1.NetworkPolicyRule{*networkPolicyRule1},
 		AppliedToGroups: []string{"addressGroup1"},
+		SourceRef:       &v1beta1.NetworkPolicyReference{UID: "policy1"},
 	}
 	networkPolicy2 := &v1beta1.NetworkPolicy{
 		ObjectMeta:      metav1.ObjectMeta{UID: "policy1"},
 		Rules:           []v1beta1.NetworkPolicyRule{*networkPolicyRule1},
 		AppliedToGroups: []string{"addressGroup2"},
+		SourceRef:       &v1beta1.NetworkPolicyReference{UID: "policy1"},
 	}
 	networkPolicy3 := &v1beta1.NetworkPolicy{
 		ObjectMeta:      metav1.ObjectMeta{UID: "policy1"},
 		Rules:           []v1beta1.NetworkPolicyRule{*networkPolicyRule1, *networkPolicyRule2},
 		AppliedToGroups: []string{"addressGroup1"},
+		SourceRef:       &v1beta1.NetworkPolicyReference{UID: "policy1"},
 	}
 	rule1 := toRule(networkPolicyRule1, networkPolicy1)
 	rule2 := toRule(networkPolicyRule1, networkPolicy2)
