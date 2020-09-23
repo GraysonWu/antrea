@@ -16,7 +16,6 @@ package ovsflows
 
 import (
 	"encoding/json"
-	cpv1beta1 "github.com/vmware-tanzu/antrea/pkg/apis/controlplane/v1beta1"
 	"net/http"
 	"strconv"
 
@@ -25,6 +24,7 @@ import (
 	"github.com/vmware-tanzu/antrea/pkg/agent/openflow"
 	"github.com/vmware-tanzu/antrea/pkg/agent/querier"
 	"github.com/vmware-tanzu/antrea/pkg/antctl/transform/common"
+	cpv1beta1 "github.com/vmware-tanzu/antrea/pkg/apis/controlplane/v1beta1"
 	binding "github.com/vmware-tanzu/antrea/pkg/ovs/openflow"
 )
 
