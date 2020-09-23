@@ -384,11 +384,13 @@ func TestRuleCacheReplaceNetworkPolicies(t *testing.T) {
 		ObjectMeta:      metav1.ObjectMeta{UID: "policy1"},
 		Rules:           []v1beta1.NetworkPolicyRule{*networkPolicyRule1},
 		AppliedToGroups: []string{"addressGroup1"},
+		SourceRef:       &v1beta1.NetworkPolicyReference{UID: "policy1"},
 	}
 	networkPolicy2 := &v1beta1.NetworkPolicy{
-		ObjectMeta:      metav1.ObjectMeta{UID: "policy1"},
+		ObjectMeta:      metav1.ObjectMeta{UID: "policy2"},
 		Rules:           []v1beta1.NetworkPolicyRule{*networkPolicyRule1},
 		AppliedToGroups: []string{"addressGroup2"},
+		SourceRef:       &v1beta1.NetworkPolicyReference{UID: "policy2"},
 	}
 	rule1 := toRule(networkPolicyRule1, networkPolicy1)
 	rule2 := toRule(networkPolicyRule1, networkPolicy2)
