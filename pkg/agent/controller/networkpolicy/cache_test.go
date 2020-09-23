@@ -387,7 +387,7 @@ func TestRuleCacheReplaceNetworkPolicies(t *testing.T) {
 		SourceRef:       &v1beta1.NetworkPolicyReference{UID: "policy1"},
 	}
 	networkPolicy2 := &v1beta1.NetworkPolicy{
-		ObjectMeta:      metav1.ObjectMeta{UID: "policy2"},
+		ObjectMeta:      metav1.ObjectMeta{UID: "policy1"},
 		Rules:           []v1beta1.NetworkPolicyRule{*networkPolicyRule1},
 		AppliedToGroups: []string{"addressGroup2"},
 		SourceRef:       &v1beta1.NetworkPolicyReference{UID: "policy2"},
@@ -531,11 +531,13 @@ func TestRuleCacheAddNetworkPolicy(t *testing.T) {
 		ObjectMeta:      metav1.ObjectMeta{UID: "policy1", Namespace: "ns1", Name: "name1"},
 		Rules:           nil,
 		AppliedToGroups: []string{"appliedToGroup1"},
+		SourceRef:       &v1beta1.NetworkPolicyReference{UID: "policy1", Namespace: "ns1", Name: "name1"},
 	}
 	networkPolicy2 := &v1beta1.NetworkPolicy{
 		ObjectMeta:      metav1.ObjectMeta{UID: "policy2", Namespace: "ns2", Name: "name2"},
 		Rules:           []v1beta1.NetworkPolicyRule{*networkPolicyRule1, *networkPolicyRule2},
 		AppliedToGroups: []string{"appliedToGroup1"},
+		SourceRef:       &v1beta1.NetworkPolicyReference{UID: "policy2", Namespace: "ns2", Name: "name2"},
 	}
 	rule1 := toRule(networkPolicyRule1, networkPolicy2)
 	rule2 := toRule(networkPolicyRule2, networkPolicy2)
@@ -905,16 +907,19 @@ func TestRuleCacheUpdateNetworkPolicy(t *testing.T) {
 		ObjectMeta:      metav1.ObjectMeta{UID: "policy1"},
 		Rules:           []v1beta1.NetworkPolicyRule{*networkPolicyRule1},
 		AppliedToGroups: []string{"addressGroup1"},
+		SourceRef:       &v1beta1.NetworkPolicyReference{UID: "policy1"},
 	}
 	networkPolicy2 := &v1beta1.NetworkPolicy{
 		ObjectMeta:      metav1.ObjectMeta{UID: "policy1"},
 		Rules:           []v1beta1.NetworkPolicyRule{*networkPolicyRule1},
 		AppliedToGroups: []string{"addressGroup2"},
+		SourceRef:       &v1beta1.NetworkPolicyReference{UID: "policy1"},
 	}
 	networkPolicy3 := &v1beta1.NetworkPolicy{
 		ObjectMeta:      metav1.ObjectMeta{UID: "policy1"},
 		Rules:           []v1beta1.NetworkPolicyRule{*networkPolicyRule1, *networkPolicyRule2},
 		AppliedToGroups: []string{"addressGroup1"},
+		SourceRef:       &v1beta1.NetworkPolicyReference{UID: "policy1"},
 	}
 	rule1 := toRule(networkPolicyRule1, networkPolicy1)
 	rule2 := toRule(networkPolicyRule1, networkPolicy2)
