@@ -172,7 +172,7 @@ type ClusterNetworkPolicySpec struct {
 	// Tier right above the K8s NetworkPolicy which resides at the bottom.
 	Tier string `json:"tier,omitempty"`
 	// Priority specfies the order of the ClusterNetworkPolicy relative to
-	// other ClusterNetworkPolicies.
+	// other AntreaClusterNetworkPolicies.
 	Priority float64 `json:"priority"`
 	// Select workloads on which the rules will be applied to.
 	AppliedTo []NetworkPolicyPeer `json:"appliedTo"`
@@ -196,4 +196,37 @@ type ClusterNetworkPolicyList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 
 	Items []ClusterNetworkPolicy `json:"items"`
+}
+
+// +genclient
+// +genclient:nonNamespaced
+// +genclient:noStatus
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type Tier struct {
+	metav1.TypeMeta `json:",inline"`
+	// Standard metadata of the object.
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	// Specification of the desired behavior of Tier.
+	Spec TierSpec `json:"spec"`
+}
+
+// TierSpec defines the desired state for Tier.
+type TierSpec struct {
+	// Priority specfies the order of the Tier relative to other Tiers.
+	Priority int32 `json:"priority"`
+	// Description is an optional field to add more information regarding
+	// the purpose of this Tier.
+	Description string `json:"description,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type TierList struct {
+	metav1.TypeMeta `json:",inline"`
+	// +optional
+	metav1.ListMeta `json:"metadata,omitempty"`
+
+	Items []Tier `json:"items"`
 }
