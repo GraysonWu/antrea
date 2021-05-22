@@ -17,7 +17,7 @@ require (
 	github.com/confluentinc/bincover v0.1.0
 	github.com/containernetworking/cni v0.8.0
 	github.com/containernetworking/plugins v0.8.7
-	github.com/contiv/libOpenflow v0.0.0-20210521033357-6b49eccb12e0
+	//github.com/contiv/libOpenflow v0.0.0-20210521033357-6b49eccb12e0
 	github.com/contiv/ofnet v0.0.0-00010101000000-000000000000
 	github.com/coreos/go-iptables v0.4.5
 	github.com/elazarl/goproxy v0.0.0-20190911111923-ecfe977594f1 // indirect
@@ -26,6 +26,7 @@ require (
 	github.com/golang/mock v1.5.0
 	github.com/golang/protobuf v1.5.0
 	github.com/google/uuid v1.1.2
+	github.com/graysonwu/libOpenflow v0.0.0-20210714003653-d5c19b47bbc1
 	github.com/k8snetworkplumbingwg/sriov-cni v2.1.0+incompatible
 	github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
@@ -34,12 +35,12 @@ require (
 	github.com/prometheus/common v0.10.0
 	github.com/rakelkar/gonetsh v0.0.0-20210226024844-dfffed138500
 	github.com/satori/go.uuid v1.2.0
-	github.com/sirupsen/logrus v1.7.0
+	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.4.1
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
 	github.com/streamrail/concurrent-map v0.0.0-20160823150647-8bf1e9bacbf6 // indirect
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	github.com/ti-mo/conntrack v0.3.0
 	github.com/vishvananda/netlink v1.1.0
 	github.com/vmware/go-ipfix v0.5.3
@@ -71,7 +72,8 @@ replace (
 	// hcshim repo is modifed to add "AdditionalParams" field to HNSEndpoint struct.
 	// We will use this replace before pushing the change to hcshim upstream repo.
 	github.com/Microsoft/hcsshim v0.8.9 => github.com/ruicao93/hcsshim v0.8.10-0.20210114035434-63fe00c1b9aa
+	//github.com/contiv/libOpenflow => github.com/graysonwu/libOpenflow v0.0.0-20210702185346-7977c0e6a004
 	// antrea/plugins/octant/go.mod also has this replacement since replace statement in dependencies
 	// were ignored. We need to change antrea/plugins/octant/go.mod if there is any change here.
-	github.com/contiv/ofnet => github.com/wenyingd/ofnet v0.0.0-20210526054554-3e71e19fd0cf
+	github.com/contiv/ofnet => github.com/graysonwu/ofnet v0.0.0-20210714003823-0655a10c9492
 )

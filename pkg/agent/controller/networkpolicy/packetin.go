@@ -18,13 +18,14 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/graysonwu/libOpenflow/util"
 	"log"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/contiv/libOpenflow/openflow13"
-	"github.com/contiv/libOpenflow/protocol"
+	"github.com/graysonwu/libOpenflow/openflow13"
+	"github.com/graysonwu/libOpenflow/protocol"
 	"github.com/contiv/ofnet/ofctrl"
 	"github.com/vmware/go-ipfix/pkg/registry"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -98,35 +99,86 @@ func initLogger() error {
 // HandlePacketIn is the packetin handler registered to openflow by Antrea network
 // policy agent controller. It performs the appropriate operations based on which
 // bits are set in the "custom reasons" field of the packet received from OVS.
-func (c *Controller) HandlePacketIn(pktIn *ofctrl.PacketIn) error {
+func (c *Controller) HandlePacketIn(pktIn *util.Message) error {
 	if pktIn == nil {
 		return errors.New("empty packetin for Antrea Policy")
 	}
 
-	matches := pktIn.GetMatches()
-	// Get custom reasons in this packet-in.
-	match := getMatchRegField(matches, uint32(openflow.CustomReasonMarkReg))
-	customReasons, err := getInfoInReg(match, openflow.CustomReasonMarkRange.ToNXRange())
-	if err != nil {
-		return fmt.Errorf("received error while unloading customReason from reg: %v", err)
+	switch p := (*pktIn).(type) {
+	case *openflow13.PacketIn:
+		return nil
+
+	case *openflow13.VendorHeader:
+		// klog.Infof("Received PacketIn2 structure (After unmarshal ori bytes): %s", p)
+		// pb, _ := p.MarshalBinary()
+		// klog.Infof("Received PacketIn2 bytes (After unmarshal then marshal ori bytes): %v", hex.Dump(pb))
+		var ps []openflow13.Property
+		// var co []openflow13.Property
+		for _, prop := range p.VendorData.(*openflow13.PacketIn2).Props {
+			if prop.Header().Type == openflow13.NXPINT_PACKET {
+				// ps = append(ps, prop)
+				data := prop.(*openflow13.PacketIn2PropPacket).Packet
+				klog.Infof("=======================p2 dst: %s, src: %s", data.Data.(*protocol.IPv4).NWDst, data.Data.(*protocol.IPv4).NWSrc)
+			}
+			// if prop.Header().Type == openflow13.NXPINT_FULL_LEN {
+			// 	ps = append(ps, prop)
+			// }
+			// if prop.Header().Type == openflow13.NXPINT_TABLE_ID {
+			// 	ps = append(ps, prop)
+			// }
+			// if prop.Header().Type == openflow13.NXPINT_COOKIE {
+			// 	ps = append(ps, prop)
+			// }
+			// if prop.Header().Type == openflow13.NXPINT_REASON {
+			// 	ps = append(ps, prop)
+			// }
+			// if prop.Header().Type == openflow13.NXPINT_METADATA {
+			// 	ps = append(ps, prop)
+			// }
+			// if prop.Header().Type == openflow13.NXPINT_CONTINUATION {
+			// 	ps = append(ps, prop)
+			// }
+			// klog.Infof("Adding %s to resume packet", prop.Header().Type)
+			if prop.Header().Type != openflow13.NXPINT_USERDATA {
+				ps = append(ps, prop)
+			}
+		}
+		resume := openflow13.NewResume(ps)
+		resume.Header.Length = resume.Len()
+		resume.Header.Xid = 0
+
+		// klog.Infof("Sending Resume structure: %s", resume)
+		// rb, _ := resume.MarshalBinary()
+		// klog.Infof("Sending Resume bytes: %v", hex.Dump(rb))
+
+		c.ofClient.SendMsg(resume)
+		return nil
 	}
 
-	// Use reasons to choose operations.
-	if customReasons&openflow.CustomReasonLogging == openflow.CustomReasonLogging {
-		if err := c.logPacket(pktIn); err != nil {
-			return err
-		}
-	}
-	if customReasons&openflow.CustomReasonReject == openflow.CustomReasonReject {
-		if err := c.rejectRequest(pktIn); err != nil {
-			return err
-		}
-	}
-	if customReasons&openflow.CustomReasonDeny == openflow.CustomReasonDeny {
-		if err := c.storeDenyConnection(pktIn); err != nil {
-			return err
-		}
-	}
+	// matches := pktIn.GetMatches()
+	// // Get custom reasons in this packet-in.
+	// match := getMatchRegField(matches, uint32(openflow.CustomReasonMarkReg))
+	// customReasons, err := getInfoInReg(match, openflow.CustomReasonMarkRange.ToNXRange())
+	// if err != nil {
+	// 	return fmt.Errorf("received error while unloading customReason from reg: %v", err)
+	// }
+	//
+	// // Use reasons to choose operations.
+	// if customReasons&openflow.CustomReasonLogging == openflow.CustomReasonLogging {
+	// 	if err := c.logPacket(pktIn); err != nil {
+	// 		return err
+	// 	}
+	// }
+	// if customReasons&openflow.CustomReasonReject == openflow.CustomReasonReject {
+	// 	if err := c.rejectRequest(pktIn); err != nil {
+	// 		return err
+	// 	}
+	// }
+	// if customReasons&openflow.CustomReasonDeny == openflow.CustomReasonDeny {
+	// 	if err := c.storeDenyConnection(pktIn); err != nil {
+	// 		return err
+	// 	}
+	// }
 	return nil
 }
 

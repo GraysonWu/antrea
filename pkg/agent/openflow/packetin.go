@@ -16,8 +16,8 @@ package openflow
 
 import (
 	"fmt"
+	"github.com/graysonwu/libOpenflow/util"
 
-	"github.com/contiv/ofnet/ofctrl"
 	"golang.org/x/time/rate"
 	"k8s.io/klog/v2"
 
@@ -27,7 +27,7 @@ import (
 type ofpPacketInReason uint8
 
 type PacketInHandler interface {
-	HandlePacketIn(pktIn *ofctrl.PacketIn) error
+	HandlePacketIn(pktIn *util.Message) error
 }
 
 const (

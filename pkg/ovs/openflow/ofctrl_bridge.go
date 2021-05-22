@@ -3,11 +3,12 @@ package openflow
 import (
 	"errors"
 	"fmt"
+	"github.com/graysonwu/libOpenflow/util"
 	"strconv"
 	"sync"
 	"time"
 
-	"github.com/contiv/libOpenflow/openflow13"
+	"github.com/graysonwu/libOpenflow/openflow13"
 	"github.com/contiv/ofnet/ofctrl"
 	"golang.org/x/time/rate"
 	"k8s.io/klog/v2"
@@ -240,13 +241,26 @@ func (b *OFBridge) DumpTableStatus() []TableStatus {
 }
 
 // PacketRcvd is a callback when a packetIn is received on ofctrl.OFSwitch.
-func (b *OFBridge) PacketRcvd(sw *ofctrl.OFSwitch, packet *ofctrl.PacketIn) {
+func (b *OFBridge) PacketRcvd(sw *ofctrl.OFSwitch, packet util.Message) {
 	klog.V(2).Infof("Received packet: %+v", packet)
-	reason := packet.Reason
+
+	var reason uint8
+	switch p := packet.(type) {
+	case *openflow13.PacketIn:
+		reason = p.Reason
+	case *openflow13.VendorHeader:
+		for _, prop := range p.VendorData.(*openflow13.PacketIn2).Props {
+			if prop.Header().Type == openflow13.NXPINT_REASON {
+				reason = prop.(*openflow13.PacketIn2PropReason).Reason
+			}
+		}
+	}
+	klog.Infof("reason: %s", reason)
+
 	v, found := b.pktConsumers.Load(reason)
 	if found {
 		pktInQueue, _ := v.(*PacketInQueue)
-		pktInQueue.AddOrDrop(packet)
+		pktInQueue.AddOrDrop(&packet)
 	}
 }
 
@@ -556,14 +570,14 @@ func (b *OFBridge) AddOFEntriesInBundle(addEntries []OFEntry, modEntries []OFEnt
 
 type PacketInQueue struct {
 	rateLimiter *rate.Limiter
-	packetsCh   chan *ofctrl.PacketIn
+	packetsCh   chan *util.Message
 }
 
 func NewPacketInQueue(size int, r rate.Limit) *PacketInQueue {
-	return &PacketInQueue{rateLimiter: rate.NewLimiter(r, 1), packetsCh: make(chan *ofctrl.PacketIn, size)}
+	return &PacketInQueue{rateLimiter: rate.NewLimiter(r, 1), packetsCh: make(chan *util.Message, size)}
 }
 
-func (q *PacketInQueue) AddOrDrop(packet *ofctrl.PacketIn) bool {
+func (q *PacketInQueue) AddOrDrop(packet *util.Message) bool {
 	select {
 	case q.packetsCh <- packet:
 		return true
@@ -573,7 +587,7 @@ func (q *PacketInQueue) AddOrDrop(packet *ofctrl.PacketIn) bool {
 	}
 }
 
-func (q *PacketInQueue) GetRateLimited(stopCh <-chan struct{}) *ofctrl.PacketIn {
+func (q *PacketInQueue) GetRateLimited(stopCh <-chan struct{}) *util.Message {
 	when := q.rateLimiter.Reserve().Delay()
 	t := time.NewTimer(when)
 	defer t.Stop()
@@ -621,6 +635,10 @@ func (b *OFBridge) BuildPacketOut() PacketOutBuilder {
 // MaxRetry is a callback from OFController. It sets the max retry count that OFController attempts to connect to OFSwitch.
 func (b *OFBridge) MaxRetry() int {
 	return b.maxRetrySec
+}
+
+func (b *OFBridge) SendMsg(msg util.Message) error {
+	return b.ofSwitch.Send(msg)
 }
 
 // RetryInterval is a callback from OFController. It sets the interval in that the OFController will initiate next connection

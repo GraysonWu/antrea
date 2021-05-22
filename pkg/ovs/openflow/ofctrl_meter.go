@@ -17,8 +17,8 @@ package openflow
 import (
 	"fmt"
 
-	"github.com/contiv/libOpenflow/openflow13"
-	"github.com/contiv/libOpenflow/util"
+	"github.com/graysonwu/libOpenflow/openflow13"
+	"github.com/graysonwu/libOpenflow/util"
 	"github.com/contiv/ofnet/ofctrl"
 )
 

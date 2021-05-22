@@ -19,7 +19,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/contiv/libOpenflow/openflow13"
+	"github.com/graysonwu/libOpenflow/openflow13"
 	"github.com/contiv/ofnet/ofctrl"
 )
 

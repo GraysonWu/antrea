@@ -15,6 +15,7 @@
 package openflow
 
 import (
+	"github.com/graysonwu/libOpenflow/util"
 	"net"
 	"time"
 
@@ -123,6 +124,8 @@ type Bridge interface {
 	SendPacketOut(packetOut *ofctrl.PacketOut) error
 	// BuildPacketOut returns a new PacketOutBuilder.
 	BuildPacketOut() PacketOutBuilder
+
+	SendMsg(msg util.Message) error
 }
 
 // TableStatus represents the status of a specific flow table. The status is useful for debugging.

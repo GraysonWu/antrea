@@ -18,11 +18,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/graysonwu/libOpenflow/util"
 	"net"
 	"time"
 
-	"github.com/contiv/libOpenflow/openflow13"
-	"github.com/contiv/libOpenflow/protocol"
+	"github.com/graysonwu/libOpenflow/openflow13"
+	"github.com/graysonwu/libOpenflow/protocol"
 	"github.com/contiv/ofnet/ofctrl"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
@@ -34,14 +35,26 @@ import (
 	binding "antrea.io/antrea/pkg/ovs/openflow"
 )
 
-func (c *Controller) HandlePacketIn(pktIn *ofctrl.PacketIn) error {
+func (c *Controller) HandlePacketIn(packetIn *util.Message) (err error) {
 	if !c.traceflowListerSynced() {
 		return errors.New("traceflow controller is not started")
 	}
-	oldTf, nodeResult, packet, err := c.parsePacketIn(pktIn)
-	if err != nil {
-		klog.Errorf("parsePacketIn error: %+v", err)
-		return err
+
+	var (
+		oldTf *crdv1alpha1.Traceflow
+		nodeResult *crdv1alpha1.NodeResult
+		packet *crdv1alpha1.Packet
+	)
+
+	switch (*packetIn).(type) {
+	case *ofctrl.PacketIn:
+		oldTf, nodeResult, packet, err = c.parsePacketIn((*packetIn).(*ofctrl.PacketIn))
+		if err != nil {
+			klog.Errorf("parsePacketIn error: %+v", err)
+			return err
+		}
+	case *openflow13.PacketIn2:
+		return
 	}
 
 	// Retry when update CRD conflict which caused by multiple agents updating one CRD at same time.

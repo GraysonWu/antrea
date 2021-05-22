@@ -18,8 +18,8 @@ import (
 	"net"
 	"testing"
 
-	"github.com/contiv/libOpenflow/protocol"
-	"github.com/contiv/libOpenflow/util"
+	"github.com/graysonwu/libOpenflow/protocol"
+	"github.com/graysonwu/libOpenflow/util"
 	"github.com/contiv/ofnet/ofctrl"
 	"github.com/stretchr/testify/assert"
 )

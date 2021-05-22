@@ -8,7 +8,7 @@ import (
 
 	utilnet "k8s.io/utils/net"
 
-	"github.com/contiv/libOpenflow/openflow13"
+	"github.com/graysonwu/libOpenflow/openflow13"
 	"github.com/contiv/ofnet/ofctrl"
 )
 
@@ -321,9 +321,11 @@ func (a *ofFlowAction) Note(notes string) FlowBuilder {
 
 func (a *ofFlowAction) SendToController(reason uint8) FlowBuilder {
 	if a.builder.ofFlow.Table != nil && a.builder.ofFlow.Table.Switch != nil {
-		controllerAct := &ofctrl.NXController{
+		controllerAct := &ofctrl.NXController2{
 			ControllerID: a.builder.ofFlow.Table.Switch.GetControllerID(),
+			Userdata:     12,
 			Reason:       reason,
+			Pause:        true,
 		}
 		a.builder.ApplyAction(controllerAct)
 	}

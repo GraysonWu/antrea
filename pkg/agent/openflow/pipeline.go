@@ -23,7 +23,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/contiv/libOpenflow/protocol"
+	"github.com/graysonwu/libOpenflow/protocol"
 	"github.com/contiv/ofnet/ofctrl"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
@@ -1605,7 +1605,7 @@ func (c *client) conjunctionActionDenyFlow(conjunctionID uint32, tableID binding
 	}
 
 	// We do not drop the packet immediately but send the packet to the metric table to update the rule metrics.
-	return flowBuilder.Action().GotoTable(metricTableID).
+	return flowBuilder.Action().ResubmitToTable(metricTableID).
 		Cookie(c.cookieAllocator.Request(cookie.Policy).Raw()).
 		Done()
 }

@@ -16,10 +16,12 @@ package openflow
 
 import (
 	"fmt"
+	"github.com/graysonwu/libOpenflow/openflow13"
+	util2 "github.com/graysonwu/libOpenflow/util"
 	"math/rand"
 	"net"
 
-	"github.com/contiv/libOpenflow/protocol"
+	"github.com/graysonwu/libOpenflow/protocol"
 	"k8s.io/klog/v2"
 
 	"antrea.io/antrea/pkg/agent/config"
@@ -277,6 +279,7 @@ type Client interface {
 		icmpCode uint8,
 		icmpData []byte,
 		isReject bool) error
+	SendMsg(message util2.Message) error
 }
 
 // GetFlowTableStatus returns an array of flow table status.
@@ -675,6 +678,11 @@ func (c *client) initialize() error {
 			return fmt.Errorf("failed to install OpenFlow meter entry (meterID:%d, rate:%d) for TraceFlow packet-in rate limiting: %v", PacketInMeterIDTF, PacketInMeterRateTF, err)
 		}
 	}
+	err := c.bridge.SendMsg(openflow13.NewSetPacketInFormet(openflow13.OFPUTIL_PACKET_IN_NXT2))
+	if err != nil {
+		klog.Infof("========= %v =========", err)
+	}
+
 	return nil
 }
 
@@ -1066,4 +1074,8 @@ func (c *client) SendICMPPacketOut(
 
 	packetOutObj := packetOutBuilder.Done()
 	return c.bridge.SendPacketOut(packetOutObj)
+}
+
+func (c *client) SendMsg(message util2.Message) error {
+	return c.bridge.SendMsg(message)
 }
